@@ -6,7 +6,6 @@ import eliminar_enlaces from "@/components/eliminar_enlaces.vue"
 import detalles_enlace from "@/components/detalles_enlace.vue"
 import editar_enlace from "@/components/editar_enlace.vue"
 import busqueda_enlace from "@/components/busqueda_enlace.vue"
-import compartir_enlace from "@/components/compartir_enlace.vue"
 import card_enlace from "@/components/card_enlace.vue"
 
 
@@ -109,7 +108,6 @@ export default {
     "detalle-enlace":detalles_enlace,
     "editar-enlace":editar_enlace,
     "buscar-enlace":busqueda_enlace,
-    "compartir-enlace":compartir_enlace,
     "enlaces":card_enlace
 
   },

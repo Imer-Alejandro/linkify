@@ -61,8 +61,8 @@ export default {
             <div  class=" body w-[40px] shadow-lg absolute ml-[85%] mt-[15px] h-[40px] p-2 box-border rounded-[100%] flex justify-center items-center bg-[#bdbdbdb2]">
                 <img @click="cerrar_detalles_enlace()" class="w-[20px] h-[20px]" src="/cerrar_1.png" alt="">
             </div>
-            <header class="w-full bg-slate-700 h-[300px]">
-                <img v-if="previewImage" class="w-full h-full" 
+            <header  class="w-full bg-slate-700 overflow-hidden h-[300px]">
+                <img v-if="previewImage" class="w-full " 
                 :src="previewImage"
                 alt="" srcset="">
             </header> 
@@ -118,12 +118,17 @@ export default {
                 </div>
             </div>
 
-            <div class="w-full bg-[#011526] p-2 mt-[10px]">
+            <div class="w-full  p-2 mt-[10px]">
                 <h3 class="mb-[5px] text-[#ABABAB]">Description:</h3>
                  <div class="w-full h-[130px] overflow-y-scroll overflow-hidden ">
-                    <p class="text-[#c9c9c9] select-none">
+                    <div v-if="datos_enlace.descripcion != ''">
+                        <p class="text-[#c9c9c9] select-none">
                         {{datos_enlace.descripcion}}
-                    </p>
+                        </p>
+                    </div>
+                    <div v-else>
+                        <h3 class="text-[0.7rem] text-gray-400 mt-[20px]">Sin descripción...</h3>
+                    </div>
                  </div>
             </div>
            

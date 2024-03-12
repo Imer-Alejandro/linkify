@@ -2,12 +2,16 @@
 import localforage from 'localforage'
 
 export default {
+    props: ['url'],
+    mounted(){
+        this.consultar_categorias();
+
+    },
     data(){
         return{
-            url_compartida: $router.query.url,
             categorias_list:[],
             enlace:{
-                enlace_url:this.url_compartida,
+                enlace_url:this.url,
                 nombre:'',
                 descripcion:'',
                 categoria:'',
@@ -84,9 +88,10 @@ export default {
             localforage.getItem("token_categoria")
                 .then((datos)=>{
                     this.categorias_list=JSON.parse(datos);
+                    console.log(this.categorias_list)
                 })
                 .catch((err)=>{
-                    console.error(err)
+                    console.error("error en la categoria"+err)
                 })
 
                 
@@ -105,7 +110,7 @@ export default {
              <form class=" p-2 w-full h-full " @submit.prevent="registrar_enlace()" >
                  <div class="w-full flex-col flex mb-[20px]">
                      <label class="mb-[5px] text-[#ABABAB] order-1"> Ruta del enlace</label>
-                     <input v-model="url_compartida"  required class="order-2 text-white  w-[100%] outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " type="url" name="" >
+                     <input v-model="enlace.enlace_url"  required class="order-2 text-white  w-[100%] outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " type="url" name="" >
                  </div>
  
                  <div class="w-full flex-col flex mb-[20px]">

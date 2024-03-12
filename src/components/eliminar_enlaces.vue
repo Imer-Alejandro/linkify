@@ -38,7 +38,7 @@ export default {
 </script>
 <template>
     <div class="body  fixed w-[100%] h-[100vh] z-30 bg-[#27293379]">
-        <div class="w-[90%] p-2 ml-[5%] mr-[5%] rounded-[2%] pt-[15px] mt-[30vh] bg-[#164773] h-[40vh]">
+        <div class="w-[90%] p-2 ml-[5%] mr-[5%] rounded-[2%] pt-[15px] mt-[30vh] bg-[#164773] h-[35vh]">
             <header class="flex flex-row  border-b-2 mb-[30px] p-2 border-b-[#C9C9C9] w-full h-[60px]">
                 <img @click="cerrar_eliminar_enlace" class="order-1 w-[30px] h-[30px]" src="/cerrar.png" alt="">
                 <h3 class="order-2 text-[1.5rem] ml-[45px] text-white -mt-[3px]">Eliminar enlace</h3>
