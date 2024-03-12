@@ -10,7 +10,7 @@ export default defineConfig({
     vue(),
     VitePWA({
       manifest: {
-        name: 'links',
+        name: 'links ',
         short_name: 'links',
         description: 'Una aplicacion para organizar y registrar enlaces',
         start_url: '/',
