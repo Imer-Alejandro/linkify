@@ -10,8 +10,8 @@ export default defineConfig({
     vue(),
     VitePWA({
       manifest: {
-        name: 'links-db',
-        short_name: 'links-db',
+        name: 'links',
+        short_name: 'links',
         description: 'Una aplicacion para organizar y registrar enlaces',
         start_url: '/',
         display: 'fullscreen',
@@ -30,14 +30,14 @@ export default defineConfig({
             purpose: 'maskable',
           },
           
-        ]
-      },
-      share_target: {
-        action: "/compartir",
-        method: "GET",
-        enctype: "application/x-www-form-urlencoded",
-        params: {
-          url: "url"
+        ],
+        share_target: {
+          action: "/compartir",
+          method: "GET",
+          enctype: "application/x-www-form-urlencoded",
+          params: {
+            url: "url"
+          }
         }
       },
       workbox: {
