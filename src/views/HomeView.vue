@@ -196,7 +196,37 @@ export default {
       .catch(err=>{
         console.error(err)
       })
+    },
+    handleBeforeInstallPrompt(event) {
+    // Mostrar el mensaje de instalación
+    event.preventDefault(); // Evitar que se muestre automáticamente
+    this.$nextTick(() => {
+      this.showInstallPrompt(event);
+    });
+  }, showInstallPrompt(event) {
+    // Puedes personalizar el mensaje según tus necesidades
+    const installPrompt = confirm('¿Quieres instalar esta aplicación en tu dispositivo?');
+
+    if (installPrompt) {
+      // Mostrar el banner de instalación
+      event.prompt();
+      // Capturar el resultado de la instalación
+      event.userChoice.then(choiceResult => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('El usuario aceptó instalar la aplicación');
+        } else {
+          console.log('El usuario rechazó la instalación de la aplicación');
+        }
+      });
+    
+      // Evento para manejar la instalación después de que el usuario acepta
+      window.addEventListener('appinstalled', (event) => {
+        console.log('La aplicación se ha instalado con éxito');
+      });
+
+
     }
+  },
   },
 }
 </script>
