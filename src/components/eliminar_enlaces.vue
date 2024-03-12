@@ -20,7 +20,7 @@ export default {
 
             localforage.setItem('token_enlace',JSON.stringify(nuevoListado))
             .then(()=>{
-                alert('enlace eliminado')
+                console.log('enlace eliminado')
             })
             .catch((err)=>{
                 console.log(err)

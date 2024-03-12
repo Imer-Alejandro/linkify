@@ -110,7 +110,7 @@ export default {
                 <img @click="cerrar_registro_enlace()" class="order-1 w-[30px] h-[30px]" src="/cerrar.png" alt="">
                 <h3 class="order-2 text-[1.5rem] text-white ml-[70px] -mt-[3px]">Registrar enlace</h3>
             </header>
-            <form class=" p-2 w-full h-full "  @submit.prevent="registrar_enlace">
+            <form class=" p-2 w-full h-full "  @submit.prevent="registrar_enlace()">
                 <div class="w-full flex-col flex mb-[20px]">
                     <label class="mb-[5px] text-[#ABABAB] order-1"> Ruta del enlace</label>
                     <input v-model="enlace.enlace_url" required class="order-2 text-white  w-[100%] outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " type="url" name="" >
@@ -139,7 +139,7 @@ export default {
                     <textarea v-model="enlace.descripcion" maxlength="640" class="order-2 w-[100%] pt-[5px] resize-none outline-none box-border pl-[10px] h-[80px] text-white rounded bg-[#033057] " name="" id="" cols="30" rows="15"></textarea>
                 </div>
 
-                <button @click="registrar_enlace()" class="w-full mt-[20px] h-[80px] bg-[#012340] shadow-lg rounded text-center text-white">
+                <button class="w-full mt-[20px] h-[80px] bg-[#012340] shadow-lg rounded text-center text-white">
                     <span class="text-[1.3rem]">Guardar</span>
                 </button>
                 

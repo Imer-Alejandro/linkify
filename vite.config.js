@@ -10,8 +10,8 @@ export default defineConfig({
     vue(),
     VitePWA({
       manifest: {
-        name: 'linkify',
-        short_name: 'linkify',
+        name: 'links-db',
+        short_name: 'links-db',
         description: 'Una aplicacion para organizar y registrar enlaces',
         start_url: '/',
         display: 'fullscreen',
@@ -32,14 +32,14 @@ export default defineConfig({
           
         ]
       },
-      // share_target: {
-      //   action: "/compartir",
-      //   method: "GET",
-      //   enctype: "application/x-www-form-urlencoded",
-      //   params: {
-      //     url: "url"
-      //   }
-      // },
+      share_target: {
+        action: "/compartir",
+        method: "GET",
+        enctype: "application/x-www-form-urlencoded",
+        params: {
+          url: "url"
+        }
+      },
       workbox: {
         clientsClaim: true,
         skipWaiting: true
