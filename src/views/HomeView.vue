@@ -232,7 +232,7 @@ export default {
 </script>
  
 <template>
-  <div class="bg-[#164773] w-full h-[100%] box-border pb-[400px]">
+  <div class="bg-[#164773] w-full h-[100%] box-border pb-[500px]">
 
     <registrar-enlace v-if="mostrarRegistrarEnlace"/>
 
