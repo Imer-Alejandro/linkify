@@ -2,12 +2,12 @@
 import localforage from 'localforage'
 
 export default {
-    props: ['url'],
+    props: ['url','text','title'],
     mounted(){
         this.consultar_categorias();
-        alert(this.url)
-        
-
+        alert("enlace:"+this.url)
+        alert("title:"+this.title)
+        alert("text:"+this.text)
     },
     data(){
         return{
