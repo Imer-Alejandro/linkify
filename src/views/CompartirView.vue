@@ -112,9 +112,6 @@ export default {
              <form class=" p-2 w-full h-full " @submit.prevent="registrar_enlace()" >
                  <div class="w-full flex-col flex mb-[20px]">
                      <label class="mb-[5px] text-[#ABABAB] order-1"> Ruta del enlace</label>
-                     <p>
-                        {{ this.url }}
-                     </p>
                      <input v-model="enlace.enlace_url"  required class="order-2 text-white  w-[100%] outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " type="url" name="" >
                  </div>
  
