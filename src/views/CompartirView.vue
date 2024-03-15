@@ -6,9 +6,6 @@ export default {
     props: ['url',"title", "text"],
     mounted(){
         this.consultar_categorias();
-        alert("enlace: " + this.url)
-        alert("titulo: " + this.title)
-        alert("texto: " + this.text)
         this.validarUrl(this.title,this.url,this.text);
   
     },
@@ -35,21 +32,30 @@ export default {
             let urlExtraida = '';
 
             // Verificar si el título contiene una URL
-            if (title && regex.test(title)) {
-                urlExtraida = title.match(regex)[0];
+            if (title) {
+                const matches = title.match(regex);
+                if (matches && matches.length > 0 && matches[0].includes('://')) {
+                    urlExtraida = matches[0];
+                }
             }
 
             // Si el título no contiene una URL, verificar el texto
-            if (!urlExtraida && text && regex.test(text)) {
-                urlExtraida = text.match(regex)[0];
+            if (!urlExtraida && text) {
+                const matches = text.match(regex);
+                if (matches && matches.length > 0 && matches[0].includes('://')) {
+                    urlExtraida = matches[0];
+                }
             }
-            // Si aún no se ha extraído la URL, usar el parámetro "url"
+            
+                // Si aún no se ha extraído la URL, usar el parámetro "url"
             if (!urlExtraida && url) {
-                urlExtraida = url;
+                const matches = url.match(regex);
+                if (matches && matches.length > 0 && matches[0].includes('://')) {
+                    urlExtraida = matches[0];
+                }
             }
 
-            this.enlace.enlace_url=urlExtraida;
-
+            this.enlace.enlace_url= urlExtraida;
 
         },
         registrar_enlace() {

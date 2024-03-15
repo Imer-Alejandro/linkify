@@ -256,7 +256,7 @@ export default {
 
     <header class="bg-[#012340] mb-[20px] justify-center items-center p-2 box-border w-full  pt-[15px] h-[200px]">
       <div class="w-full flex flex-row">
-        <h1 class="order-1 text-[1.5rem] text-white">Linkify</h1>
+        <h1 class="order-1 text-[1.5rem] text-white">Links</h1>
         
       </div> 
       <!-- formulario de busqueda -->
