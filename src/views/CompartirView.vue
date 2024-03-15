@@ -9,15 +9,15 @@ export default {
         alert("enlace: " + this.url)
         alert("titulo: " + this.title)
         alert("texto: " + this.text)
-
+        this.validarUrl(this.title,this.url,this.text);
   
     },
     data(){
         return{
             categorias_list:[],
             enlace:{
-                enlace_url:this.url,
-                nombre:'',
+                enlace_url:"",
+                nombre:"",
                 descripcion:'',
                 categoria:'',
                 origen:''
@@ -27,6 +27,30 @@ export default {
     methods:{
         regresar_inicio(){
             this.$router.push('/');
+        },
+        validarUrl(title, url, text){
+            // Expresión regular para detectar URLs
+            const regex = /(?:https?:\/\/)?([^\s]+)/g;
+
+            let urlExtraida = '';
+
+            // Verificar si el título contiene una URL
+            if (title && regex.test(title)) {
+                urlExtraida = title.match(regex)[0];
+            }
+
+            // Si el título no contiene una URL, verificar el texto
+            if (!urlExtraida && text && regex.test(text)) {
+                urlExtraida = text.match(regex)[0];
+            }
+            // Si aún no se ha extraído la URL, usar el parámetro "url"
+            if (!urlExtraida && url) {
+                urlExtraida = url;
+            }
+
+            this.enlace.enlace_url=urlExtraida;
+
+
         },
         registrar_enlace() {
   if (this.enlace.categoria === '') {
