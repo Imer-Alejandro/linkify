@@ -14,7 +14,7 @@ const router = createRouter({
       path: '/compartir',
       name: 'Compartir',
       component: () => import('../views/CompartirView.vue'),
-      props: route => ({ ...route.params, ...route.query }),
+      props: router => ({ ...router.params, ...router.query }),
     }
     
   ]

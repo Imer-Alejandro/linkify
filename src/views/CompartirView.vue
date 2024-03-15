@@ -1,13 +1,16 @@
 <script>
+import router from '@/router';
 import localforage from 'localforage'
 
 export default {
-    props: ['url','text','title'],
+    props: ['url',"title", "text"],
     mounted(){
         this.consultar_categorias();
-        alert("enlace:"+this.url)
-        alert("title:"+this.title)
-        alert("text:"+this.text)
+        alert("enlace: " + this.url)
+        alert("titulo: " + this.title)
+        alert("texto: " + this.text)
+
+  
     },
     data(){
         return{
