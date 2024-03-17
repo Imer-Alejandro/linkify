@@ -26,37 +26,36 @@ export default {
             this.$router.push('/');
         },
         validarUrl(title, url, text){
-            // Expresión regular para detectar URLs
-            const regex = /(?:https?:\/\/)?([^\s]+)/g;
+            const regex = /(?:https?:\/\/[^\s?]+)/g;
 
             let urlExtraida = '';
 
             // Verificar si el título contiene una URL
             if (title) {
-                const matches = title.match(regex);
-                if (matches && matches.length > 0 && matches[0].includes('://')) {
-                    urlExtraida = matches[0];
+                const titleMatches = title.match(regex);
+                if (titleMatches && titleMatches.length > 0) {
+                    urlExtraida = titleMatches[0];
                 }
             }
 
             // Si el título no contiene una URL, verificar el texto
             if (!urlExtraida && text) {
-                const matches = text.match(regex);
-                if (matches && matches.length > 0 && matches[0].includes('://')) {
-                    urlExtraida = matches[0];
+                const textMatches = text.match(regex);
+                if (textMatches && textMatches.length > 0) {
+                    urlExtraida = textMatches[0];
                 }
             }
             
-                // Si aún no se ha extraído la URL, usar el parámetro "url"
+            // Si aún no se ha extraído la URL, usar el parámetro "url"
             if (!urlExtraida && url) {
-                const matches = url.match(regex);
-                if (matches && matches.length > 0 && matches[0].includes('://')) {
-                    urlExtraida = matches[0];
+                const urlMatches = url.match(regex);
+                if (urlMatches && urlMatches.length > 0) {
+                    urlExtraida = urlMatches[0];
                 }
             }
 
-            this.enlace.enlace_url= urlExtraida;
-
+            // Asignar la URL extraída a this.enlace.enlace_url
+            this.enlace.enlace_url = urlExtraida;
         },
         registrar_enlace() {
   if (this.enlace.categoria === '') {

@@ -6,6 +6,7 @@ import localforage from 'localforage'
 export default {
     props:['dato_busqueda'],
     mounted(){
+        alert(this.dato_busqueda)
         this.buscar_enlaces();
     },
     data(){
