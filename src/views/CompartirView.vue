@@ -1,6 +1,6 @@
 <script>
-import router from '@/router';
 import localforage from 'localforage'
+import { toast } from 'vue3-toastify'
 
 export default {
     props: ['url',"title", "text"],
@@ -11,6 +11,8 @@ export default {
     data(){
         return{
             categorias_list:[],
+            mostrandoNuevaCategoria: false,
+            nuevaCategoria: '',
             enlace:{
                 enlace_url:"",
                 nombre:"",
@@ -50,37 +52,59 @@ export default {
             }
             this.enlace.enlace_url = urlExtraida;
         },
+        crearCategoria(){
+            const nombre = this.nuevaCategoria.trim()
+            if (!nombre) return
+            localforage.getItem('token_categoria')
+            .then(datos => {
+                let categorias = datos ? JSON.parse(datos) : []
+                if (categorias.includes(nombre)) {
+                    toast.error('La categoría ya existe')
+                    return
+                }
+                categorias.unshift(nombre)
+                return localforage.setItem('token_categoria', JSON.stringify(categorias))
+            })
+            .then(() => {
+                this.categorias_list.unshift(this.nuevaCategoria.trim())
+                this.enlace.categoria = this.nuevaCategoria.trim()
+                this.nuevaCategoria = ''
+                this.mostrandoNuevaCategoria = false
+                toast.success('Categoría creada')
+            })
+            .catch(err => console.error(err))
+        },
         registrar_enlace() {
-  if (this.enlace.categoria === '') {
-    alert("Debe indicar una categoría");
-  } else {
-    localforage.getItem('token_enlace')
-      .then(datosAlmacenados => {
-        if (datosAlmacenados !== null) {
-            let listado_enlaces =JSON.parse(datosAlmacenados) ;
-            const enlaceExistente = listado_enlaces.find(element =>
-            element.nombre === this.enlace.nombre || element.enlace_url === this.enlace.enlace_url
-            );
-            if (enlaceExistente) {
-            console.log("Ya existe un enlace con el mismo nombre o URL.");
-            } else {
-            this.enlace.origen=this.determinar_origen(this.enlace.enlace_url);
-            listado_enlaces.unshift(this.enlace);
-            return localforage.setItem('token_enlace', JSON.stringify(listado_enlaces));
+            if (this.enlace.categoria === '') {
+                toast.error("Debe indicar una categoría");
+                return
             }
-        }else{
-            let nuevo_listado_enlace = [this.enlace];
-            return localforage.setItem('token_enlace', JSON.stringify(nuevo_listado_enlace));
-        }
-      })
-      .then(() => {
-        this.regresar_inicio();
-      })
-      .catch(error => {
-        console.error('Error al almacenar/recuperar datos:', error);
-      });
-  }
-},
+            localforage.getItem('token_enlace')
+            .then(datosAlmacenados => {
+                if (datosAlmacenados !== null) {
+                    let listado_enlaces = JSON.parse(datosAlmacenados);
+                    const enlaceExistente = listado_enlaces.find(element =>
+                        element.nombre === this.enlace.nombre || element.enlace_url === this.enlace.enlace_url
+                    );
+                    if (enlaceExistente) {
+                        toast.error("Ya existe un enlace con el mismo nombre o URL.");
+                        return;
+                    }
+                    this.enlace.origen = this.determinar_origen(this.enlace.enlace_url);
+                    listado_enlaces.unshift(this.enlace);
+                    return localforage.setItem('token_enlace', JSON.stringify(listado_enlaces));
+                }
+                let nuevo_listado_enlace = [this.enlace];
+                return localforage.setItem('token_enlace', JSON.stringify(nuevo_listado_enlace));
+            })
+            .then(() => {
+                toast.success('Enlace guardado')
+                this.regresar_inicio();
+            })
+            .catch(error => {
+                console.error('Error al almacenar/recuperar datos:', error);
+            });
+        },
         determinar_origen(url){
             const patrones = {
                 facebook: /(?:https?:\/\/)?(?:www\.)?facebook\.(com|es)/,
@@ -91,70 +115,95 @@ export default {
             };
             for (const origen in patrones) {
                 if (patrones[origen].test(url)) {
-                return origen;
+                    return origen;
                 }
             }
             return "global";
         },
         consultar_categorias(){
             localforage.getItem("token_categoria")
-                .then((datos)=>{
-                    this.categorias_list=JSON.parse(datos);
-                })
-                .catch((err)=>{
-                    console.error("error en la categoria"+err)
-                })
+            .then((datos) => {
+                this.categorias_list = datos ? JSON.parse(datos) : []
+            })
+            .catch((err) => {
+                console.error("error en la categoria" + err)
+            })
         }
     }
 }
 </script>
 <template>
-    <div class="body  fixed w-[100%] h-[100vh] z-20 bg-[#27293379]">
-         <div class="w-[100%] p-2 pt-[15px]  bg-[#164773] h-[100vh]">
-             <header class="flex flex-row border-b-[1px] mb-[20px] p-2 border-b-[#C9C9C9] w-full h-[60px]">
-                 <img @click="regresar_inicio()" class="order-1 w-[30px] h-[30px]" src="/cerrar.png" alt="">
-                 <h3 class="order-2 text-[1.5rem] text-white ml-[70px] -mt-[3px]">Registrar enlace</h3>
-             </header>
-             <form class=" p-2 w-full h-full " @submit.prevent="registrar_enlace()" >
-                 <div class="w-full flex-col flex mb-[20px]">
-                     <label class="mb-[5px] text-[#ABABAB] order-1"> Ruta del enlace</label>
-                     <input v-model="enlace.enlace_url"  required class="order-2 text-white  w-[100%] outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " type="url" name="" >
-                 </div>
+    <div class="min-h-screen bg-[#0f172a]">
+        <div class="min-h-screen flex flex-col">
+            <!-- Header -->
+            <header class="sticky top-0 z-30 bg-[#0f172a]/90 backdrop-blur-xl border-b border-slate-800">
+                <div class="flex items-center justify-between px-4 h-14">
+                    <div class="flex items-center gap-3">
+                        <button @click="regresar_inicio()" class="p-2 -ml-2 hover:bg-slate-800 rounded-xl transition-colors">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                        </button>
+                        <h1 class="text-lg font-semibold">Nuevo enlace</h1>
+                    </div>
+                </div>
+            </header>
 
-                 <div class="w-full flex-col flex mb-[20px]">
-                     <label class="mb-[5px] text-[#ABABAB] order-1">Nombre del enlace</label>
-                     <input  v-model="enlace.nombre" maxlength="65" required class="order-2 text-white  w-[100%] outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " type="text" name="" >
-                 </div>
-
-                 <div class="w-full flex-col flex mb-[20px]">
-                    <label class="mb-[5px] text-[#ABABAB] order-1">Categoria</label>
-                    <select v-model="enlace.categoria"  class="order-2 w-[100%] text-white outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " name="" id="">
-                        <option value=""></option>
-                        <option class="text-white "
-                            v-for="(categorias,index) in this.categorias_list"
-                            :key="index"
-                            :value="categorias">
-                            {{ categorias }}
-                        </option>
-                    </select>
+            <!-- Form -->
+            <form @submit.prevent="registrar_enlace()" class="flex-1 p-4 space-y-5 overflow-y-auto pb-8">
+                <!-- URL preview -->
+                <div class="card p-3 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-700/50 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-slate-300 truncate">{{ enlace.enlace_url || 'https://...' }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Enlace a guardar</p>
+                    </div>
                 </div>
 
-                 <div class="w-full flex-col flex mb-[20px]">
-                     <label class="mb-[5px] text-[#ABABAB] order-1">Description del enlace - optional</label>
-                     <textarea v-model="enlace.descripcion" maxlength="640" class="order-2 w-[100%] pt-[5px] resize-none outline-none box-border pl-[10px] h-[80px] text-white rounded bg-[#033057] " name="" id="" cols="30" rows="15"></textarea>
-                 </div>
+                <div class="space-y-1.5">
+                    <label class="text-sm text-slate-400 font-medium">Nombre del enlace</label>
+                    <input v-model="enlace.nombre" maxlength="65" required class="input-field" type="text" placeholder="Ej: Mi artículo favorito">
+                </div>
 
-                 <button  class="w-full mt-[20px] h-[80px] bg-[#012340] shadow-lg rounded text-center text-white">
-                     <span class="text-[1.3rem]">Guardar</span>
-                 </button>
+                <!-- Category with inline creation -->
+                <div class="space-y-1.5">
+                    <label class="text-sm text-slate-400 font-medium">Categoría</label>
+                    <select v-model="enlace.categoria" required class="select-field">
+                        <option value="" disabled>Seleccionar categoría</option>
+                        <option v-for="(categoria, index) in categorias_list" :key="index" :value="categoria">
+                            {{ categoria }}
+                        </option>
+                    </select>
 
-             </form>
-         </div>
-     </div>
- </template>
+                    <!-- Inline create category -->
+                    <div v-if="!mostrandoNuevaCategoria" class="mt-2">
+                        <button @click.prevent="mostrandoNuevaCategoria = true" type="button" class="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Crear nueva categoría
+                        </button>
+                    </div>
+                    <div v-else class="mt-2 flex gap-2">
+                        <input v-model="nuevaCategoria" maxlength="35" class="input-field flex-1" type="text" placeholder="Nombre de la categoría" @keydown.enter.prevent="crearCategoria">
+                        <button @click.prevent="crearCategoria" type="button" class="btn-primary !w-auto px-4">Crear</button>
+                        <button @click.prevent="mostrandoNuevaCategoria = false; nuevaCategoria = ''" type="button" class="px-3 py-2 text-sm text-slate-400 hover:text-white transition-colors">Cancelar</button>
+                    </div>
+                </div>
 
- <style scoped>
- .body{
-     backdrop-filter: blur(2px);
- }
- </style>
+                <div class="space-y-1.5">
+                    <label class="text-sm text-slate-400 font-medium">Descripción <span class="text-slate-500">(opcional)</span></label>
+                    <textarea v-model="enlace.descripcion" maxlength="640" class="input-field min-h-[90px] pt-3 resize-none" placeholder="Añadir descripción..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    Guardar enlace
+                </button>
+            </form>
+        </div>
+    </div>
+</template>

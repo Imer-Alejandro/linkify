@@ -4,9 +4,8 @@ import localforage from 'localforage';
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
+import Vue3Toastify from 'vue3-toastify'
 
-
-// Configuración de LocalForage para usar IndexedDB
 localforage.config({
     driver: localforage.INDEXEDDB,
     name: 'mi_app_vue3',
@@ -18,5 +17,14 @@ localforage.config({
 const app = createApp(App)
 
 app.use(router)
+app.use(Vue3Toastify, {
+  position: 'bottom-right',
+  autoClose: 2500,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  newestOnTop: true,
+  theme: 'dark',
+})
 
 app.mount('#app')

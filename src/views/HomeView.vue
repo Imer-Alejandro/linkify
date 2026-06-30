@@ -97,6 +97,7 @@ export default {
   },
   data(){
     return{
+      loading: true,
       datos_enlace_acion:'',
       id_categoria:'',
       enlaces:[],
@@ -130,15 +131,11 @@ export default {
       localforage.getItem("token_enlace")
       .then(listado => {
         let items = listado ? JSON.parse(listado) : []
-
-        // Filter by category
         if (this.filtar_elementos && this.filtar_elementos !== '- todos' && this.filtar_elementos !== '- favoritos') {
           items = items.filter(e => e.categoria === this.filtar_elementos)
         } else if (this.filtar_elementos === '- favoritos') {
           items = items.filter(e => e.favorito)
         }
-
-        // Sort
         if (this.sortOption === 'nombre') {
           items.sort((a, b) => a.nombre.localeCompare(b.nombre))
         } else if (this.sortOption === 'nombre_desc') {
@@ -148,8 +145,8 @@ export default {
         } else {
           items.sort((a, b) => (b.fecha_creacion || 0) - (a.fecha_creacion || 0))
         }
-
         this.enlaces = items
+        this.loading = false
         this.indicador_categoria = `- ${this.filtar_elementos === '- favoritos' ? 'favoritos' : this.filtar_elementos}`
       })
       .catch(err => console.error(err))
@@ -258,7 +255,7 @@ export default {
       </div>
 
       <!-- Categories + Favorites -->
-      <div class="px-4 pb-2 overflow-x-auto">
+      <div class="px-4 pb-2 overflow-x-auto category-scroll-fade">
         <div class="flex items-center gap-2 min-w-max pb-1">
           <button @click="abrir_registro_categoria()" class="category-pill-inactive flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -331,18 +328,42 @@ export default {
         <span class="text-xs text-slate-500">{{ enlaces.length }} enlaces</span>
       </div>
 
-      <div v-if="enlaces.length > 0">
-        <div v-for="(card, index) in enlaces" :key="index" class="mb-3">
-          <enlaces :datosEnlace="card"/>
+      <!-- Loading skeleton -->
+      <div v-if="loading" class="space-y-3">
+        <div v-for="n in 5" :key="n" class="card p-4 flex items-center gap-3">
+          <div class="skeleton w-10 h-10 rounded-xl flex-shrink-0"></div>
+          <div class="flex-1 space-y-2">
+            <div class="skeleton h-4 w-3/5 rounded"></div>
+            <div class="skeleton h-3 w-4/5 rounded"></div>
+          </div>
+          <div class="skeleton w-9 h-9 rounded-xl flex-shrink-0"></div>
         </div>
       </div>
-      <div v-else class="flex flex-col items-center justify-center py-20 text-slate-500">
-        <svg class="w-12 h-12 mb-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+
+      <div v-else-if="enlaces.length > 0">
+        <div v-for="(card, index) in enlaces" :key="index" class="mb-3" :style="{ animationDelay: index * 0.05 + 's' }">
+          <div class="card-enter">
+            <enlaces :datosEnlace="card"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div v-else class="flex flex-col items-center justify-center py-24 select-none">
+        <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
         </svg>
-        <p class="text-sm">No hay enlaces todavía</p>
-        <button @click="abrir_registro_enlaces()" class="mt-3 text-sm text-blue-400 hover:text-blue-300 transition-colors">
-          Agregar tu primer enlace
+        <p class="text-slate-500 font-medium mb-1">
+          {{ filtar_elementos === '- favoritos' ? 'Sin favoritos' : 'No hay enlaces aquí' }}
+        </p>
+        <p class="text-slate-600 text-sm mb-4">
+          {{ filtar_elementos === '- favoritos' ? 'Marca enlaces como favoritos con la estrella' : 'Agrega tu primer enlace para empezar' }}
+        </p>
+        <button @click="abrir_registro_enlaces()" class="btn-primary !w-auto px-6 !h-10 text-sm">
+          <svg class="w-4 h-4 inline mr-1.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nuevo enlace
         </button>
       </div>
     </main>
