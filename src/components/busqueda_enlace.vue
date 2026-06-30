@@ -25,7 +25,7 @@ export default {
             .then(listadoEnlaces =>{
                 if (listadoEnlaces != null){
                     this.listado_resultado= JSON.parse(listadoEnlaces).filter(element=>{
-                        return element.nombre.toLowerCase().includes(this.dato_busqueda)
+                        return element.nombre.toLowerCase().includes(this.dato_busqueda.toLowerCase())
                     })
                 }
             })
@@ -34,34 +34,34 @@ export default {
 }
 </script>
 <template>
-    <div class="body  fixed w-[100%] h-[100vh] z-20 bg-[#27293379]">
-        <div class="w-[100%] p-2 pt-[15px] mt-[10vh] bg-[#164773] h-[90vh]">
-            <header class="flex flex-row border-b-2 mb-[20px] p-2 border-b-[#C9C9C9] w-full h-[60px]">
-                <img @click="cerrar_busqueda_enlace()" class="order-1 w-[30px] h-[30px]" src="/cerrar.png" alt="">
-                <h3 class="order-2 text-[1.5rem] ml-[40px] text-white -mt-[3px]">Resultado de busqueda</h3>
-            </header>
-            <div>
-                <h3 class="mb-[20px] text-[#C4C4C4]">Enlaces encontrados: <span class="bg-[#498AD4] p-1 rounded text-white">{{ listado_resultado.length }}</span></h3>
-                <!-- CARGA DE LOS ENLACES -->
-                <div class="w-full h-[500px] overflow-hidden overflow-y-scroll p-1 ">
-                    <div v-if="listado_resultado.length > 0">
-                        <div 
-                        v-for="(enlace,index) in listado_resultado" :key="index">
-                            <card-link :datosEnlace="enlace"/>
-                        </div>
+    <div class="overlay" @click.self="cerrar_busqueda_enlace()">
+        <div class="bottom-sheet max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-4 border-b border-slate-700/50">
+                <h3 class="text-lg font-semibold">Resultados de búsqueda</h3>
+                <button @click="cerrar_busqueda_enlace()" class="p-2 hover:bg-slate-700/50 rounded-xl transition-colors">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-sm text-slate-400">Encontrados:</span>
+                    <span class="text-sm font-medium text-white bg-blue-600/20 px-2.5 py-0.5 rounded-full">{{ listado_resultado.length }}</span>
+                </div>
+
+                <div v-if="listado_resultado.length > 0" class="space-y-3">
+                    <div v-for="(enlace, index) in listado_resultado" :key="index">
+                        <card-link :datosEnlace="enlace"/>
                     </div>
-                    <div class="w-full flex text-center items-center justify-center" v-else>
-                        <h3 class="text-[#C4C4C4] ">No se encontraron coincidencias...</h3>
-                    </div>
+                </div>
+                <div v-else class="flex flex-col items-center justify-center py-16 text-slate-500">
+                    <svg class="w-10 h-10 mb-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <p class="text-sm">No se encontraron coincidencias</p>
                 </div>
             </div>
         </div>
     </div>
 </template>
-
-
-<style scoped>
-.body{
-    backdrop-filter: blur(2px);
-}
-</style>

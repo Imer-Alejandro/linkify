@@ -7,7 +7,6 @@ export default {
     mounted(){
         this.consultar_categorias();
         this.validarUrl(this.title,this.url,this.text);
-  
     },
     data(){
         return{
@@ -17,7 +16,10 @@ export default {
                 nombre:"",
                 descripcion:'',
                 categoria:'',
-                origen:''
+                origen:'',
+                favorito: false,
+                fecha_creacion: Date.now(),
+                tags: []
             }
         }
     },
@@ -27,34 +29,25 @@ export default {
         },
         validarUrl(title, url, text){
             const regex = /(?:https?:\/\/[^\s?]+)/g;
-
             let urlExtraida = '';
-
-            // Verificar si el título contiene una URL
             if (title) {
                 const titleMatches = title.match(regex);
                 if (titleMatches && titleMatches.length > 0) {
                     urlExtraida = titleMatches[0];
                 }
             }
-
-            // Si el título no contiene una URL, verificar el texto
             if (!urlExtraida && text) {
                 const textMatches = text.match(regex);
                 if (textMatches && textMatches.length > 0) {
                     urlExtraida = textMatches[0];
                 }
             }
-            
-            // Si aún no se ha extraído la URL, usar el parámetro "url"
             if (!urlExtraida && url) {
                 const urlMatches = url.match(regex);
                 if (urlMatches && urlMatches.length > 0) {
                     urlExtraida = urlMatches[0];
                 }
             }
-
-            // Asignar la URL extraída a this.enlace.enlace_url
             this.enlace.enlace_url = urlExtraida;
         },
         registrar_enlace() {
@@ -65,29 +58,20 @@ export default {
       .then(datosAlmacenados => {
         if (datosAlmacenados !== null) {
             let listado_enlaces =JSON.parse(datosAlmacenados) ;
-
-            // Validar si existen enlaces con el mismo nombre o URL
             const enlaceExistente = listado_enlaces.find(element =>
             element.nombre === this.enlace.nombre || element.enlace_url === this.enlace.enlace_url
             );
-
             if (enlaceExistente) {
             console.log("Ya existe un enlace con el mismo nombre o URL.");
             } else {
-            //asignarle el origen
             this.enlace.origen=this.determinar_origen(this.enlace.enlace_url);
-            // Agregar el nuevo enlace al principio del array
             listado_enlaces.unshift(this.enlace);
-
-            // Almacenar el nuevo array en LocalForage
             return localforage.setItem('token_enlace', JSON.stringify(listado_enlaces));
             }
         }else{
-            // Si no hay datos almacenados, crear un nuevo array con la categoría
             let nuevo_listado_enlace = [this.enlace];
             return localforage.setItem('token_enlace', JSON.stringify(nuevo_listado_enlace));
         }
-        
       })
       .then(() => {
         this.regresar_inicio();
@@ -97,9 +81,7 @@ export default {
       });
   }
 },
-        
         determinar_origen(url){
-            // Expresiones regulares para verificar el origen de la URL
             const patrones = {
                 facebook: /(?:https?:\/\/)?(?:www\.)?facebook\.(com|es)/,
                 instagram: /(?:https?:\/\/)?(?:www\.)?instagram\.(com|es)/,
@@ -107,30 +89,22 @@ export default {
                 youtube: /(?:https?:\/\/)?(?:www\.)?(youtube|youtu)\.(com|es|be)/,
                 pinterest: /(?:https?:\/\/)?(?:www\.)?(pinterest|pin)\.(com|es|it)/,
             };
-
-            // Verificar si la URL coincide con algún patrón
             for (const origen in patrones) {
                 if (patrones[origen].test(url)) {
                 return origen;
                 }
             }
-
-            // Si no coincide con ninguno de los patrones, asignar "global" por defecto
             return "global";
         },
         consultar_categorias(){
             localforage.getItem("token_categoria")
                 .then((datos)=>{
                     this.categorias_list=JSON.parse(datos);
-                    console.log(this.categorias_list)
                 })
                 .catch((err)=>{
                     console.error("error en la categoria"+err)
                 })
-
-                
         }
-        
     }
 }
 </script>
@@ -146,40 +120,39 @@ export default {
                      <label class="mb-[5px] text-[#ABABAB] order-1"> Ruta del enlace</label>
                      <input v-model="enlace.enlace_url"  required class="order-2 text-white  w-[100%] outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " type="url" name="" >
                  </div>
- 
+
                  <div class="w-full flex-col flex mb-[20px]">
                      <label class="mb-[5px] text-[#ABABAB] order-1">Nombre del enlace</label>
                      <input  v-model="enlace.nombre" maxlength="65" required class="order-2 text-white  w-[100%] outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " type="text" name="" >
                  </div>
- 
+
                  <div class="w-full flex-col flex mb-[20px]">
                     <label class="mb-[5px] text-[#ABABAB] order-1">Categoria</label>
                     <select v-model="enlace.categoria"  class="order-2 w-[100%] text-white outline-none box-border pl-[10px] h-[50px]  rounded bg-[#033057]  " name="" id="">
                         <option value=""></option>
                         <option class="text-white "
-                            v-for="(categorias,index) in this.categorias_list" 
-                            :key="index" 
+                            v-for="(categorias,index) in this.categorias_list"
+                            :key="index"
                             :value="categorias">
                             {{ categorias }}
                         </option>
                     </select>
                 </div>
- 
+
                  <div class="w-full flex-col flex mb-[20px]">
                      <label class="mb-[5px] text-[#ABABAB] order-1">Description del enlace - optional</label>
                      <textarea v-model="enlace.descripcion" maxlength="640" class="order-2 w-[100%] pt-[5px] resize-none outline-none box-border pl-[10px] h-[80px] text-white rounded bg-[#033057] " name="" id="" cols="30" rows="15"></textarea>
                  </div>
- 
+
                  <button  class="w-full mt-[20px] h-[80px] bg-[#012340] shadow-lg rounded text-center text-white">
                      <span class="text-[1.3rem]">Guardar</span>
                  </button>
-                 
-                
+
              </form>
          </div>
      </div>
  </template>
- 
+
  <style scoped>
  .body{
      backdrop-filter: blur(2px);
