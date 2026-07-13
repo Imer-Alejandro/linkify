@@ -21,6 +21,7 @@ export default {
     this.obtener_categoria();
     this.obtener_enlaces();
     this.verificarRecordatorios();
+    this.actualizarEstadoNotificaciones();
     this.reminderCheckInterval = window.setInterval(() => {
       this.verificarRecordatorios()
     }, 30000)
@@ -128,7 +129,9 @@ export default {
       mostrarExportExcel:false,
       upcomingReminders:[],
       scheduledReminderTimers:[],
-      reminderCheckInterval:null
+      reminderCheckInterval:null,
+      notificationPermission:'default',
+      notificationPermissionMessage:''
     }
   },
   computed:{
@@ -224,6 +227,54 @@ export default {
     limpiarTimers(){
       this.scheduledReminderTimers.forEach(timerId => clearTimeout(timerId))
       this.scheduledReminderTimers = []
+    },
+    actualizarEstadoNotificaciones() {
+      if (!('Notification' in window)) {
+        this.notificationPermission = 'unsupported'
+        this.notificationPermissionMessage = 'Tu navegador no admite notificaciones.'
+        return
+      }
+
+      this.notificationPermission = Notification.permission
+      if (Notification.permission === 'granted') {
+        this.notificationPermissionMessage = ''
+      } else if (Notification.permission === 'denied') {
+        this.notificationPermissionMessage = 'Las notificaciones están bloqueadas. Actívalas desde la configuración del navegador.'
+      } else {
+        this.notificationPermissionMessage = 'Activa las notificaciones para recibir alertas de tus recordatorios.'
+      }
+    },
+    async solicitarPermisosNotificaciones() {
+      if (!('Notification' in window)) {
+        this.notificationPermission = 'unsupported'
+        this.notificationPermissionMessage = 'Tu navegador no admite notificaciones.'
+        toast.error('Tu navegador no admite notificaciones.')
+        return
+      }
+
+      if (Notification.permission === 'granted') {
+        this.notificationPermission = 'granted'
+        this.notificationPermissionMessage = ''
+        toast.success('Las notificaciones ya están activadas.')
+        return
+      }
+
+      if (Notification.permission === 'denied') {
+        this.notificationPermission = 'denied'
+        this.notificationPermissionMessage = 'Las notificaciones están bloqueadas. Actívalas desde la configuración del navegador.'
+        toast.warning('Las notificaciones están bloqueadas en este navegador.')
+        return
+      }
+
+      const permission = await Notification.requestPermission()
+      this.notificationPermission = permission
+      if (permission === 'granted') {
+        this.notificationPermissionMessage = ''
+        toast.success('Notificaciones activadas correctamente.')
+      } else {
+        this.notificationPermissionMessage = 'Las notificaciones están bloqueadas. Actívalas desde la configuración del navegador.'
+        toast.error('No se concedieron las notificaciones.')
+      }
     },
     async verificarRecordatorios(){
       try {
@@ -385,6 +436,45 @@ export default {
           </button>
         </form>
       </div>
+
+      <div v-if="notificationPermission !== 'granted'" class="mx-4 mb-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-sm font-medium text-white">Notificaciones</p>
+            <p class="mt-1 text-xs text-slate-400">{{ notificationPermissionMessage || 'Activa las alertas para recibir recordatorios de tus enlaces.' }}</p>
+          </div>
+          <button @click="solicitarPermisosNotificaciones" class="rounded-full bg-blue-600 px-3 py-1.5 text-xs font-medium text-white">
+            {{ notificationPermission === 'denied' ? 'Reintentar' : 'Activar' }}
+          </button>
+        </div>
+      </div>
+
+      <section v-if="upcomingReminders.length" class="mx-4 mb-4 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-slate-800/80 p-4 shadow-lg">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Próximos recordatorios</p>
+            <h3 class="mt-1 text-sm font-semibold text-white">Lo que vence pronto</h3>
+          </div>
+          <span class="rounded-full border border-slate-700 bg-slate-800/70 px-2.5 py-1 text-[11px] text-slate-400">
+            {{ upcomingReminders.length }} pendientes
+          </span>
+        </div>
+
+        <div class="mt-3 space-y-2">
+          <div v-for="item in upcomingReminders" :key="item.enlace_url + item.reminder_at" class="rounded-2xl border border-slate-800 bg-slate-950/70 p-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-medium text-white">{{ item.nombre }}</p>
+                <p class="mt-1 text-xs text-slate-400">{{ item.descripcion || 'Sin descripción' }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-[11px] uppercase tracking-[0.24em] text-slate-500">{{ new Date(item.reminder_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) }}</p>
+                <p class="mt-1 text-sm font-medium text-blue-300">{{ new Date(item.reminder_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- Categories + Favorites -->
       <div class="px-4 pb-2 overflow-x-auto category-scroll-fade">
