@@ -379,13 +379,12 @@ export default {
     <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
       <div class="px-4 pt-4 pb-3">
         <div class="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-4 shadow-lg">
-          <div class="flex items-start justify-between gap-3">
-            <div>
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0">
               <p class="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">Dashboard</p>
-              <h1 class="mt-1 text-xl font-semibold text-white">Gestiona tus enlaces con calma</h1>
-              <p class="mt-1 text-sm text-slate-400">Organiza, prioriza y recuerda lo que te importa.</p>
+              <h1 class="mt-1 text-lg font-semibold text-white sm:text-xl">Links</h1>
             </div>
-            <div class="flex items-center gap-1">
+            <div class="flex flex-wrap items-center justify-end gap-1 sm:shrink-0">
               <button @click="irARecordatorios" class="rounded-full border border-slate-700 bg-slate-800/70 px-3 py-2 text-xs font-medium text-slate-200">
                 Calendario
               </button>
@@ -403,17 +402,17 @@ export default {
           </div>
 
           <div class="mt-4 grid grid-cols-3 gap-2">
-            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
-              <p class="text-[10px] uppercase tracking-[0.24em] text-slate-500">Enlaces</p>
-              <p class="mt-1 text-lg font-semibold text-white">{{ stats.totalEnlaces }}</p>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-2.5 text-center sm:p-3">
+              <p class="truncate text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-500 sm:text-[10px]">Enlaces</p>
+              <p class="mt-1 text-base font-semibold text-white sm:text-lg">{{ stats.totalEnlaces }}</p>
             </div>
-            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
-              <p class="text-[10px] uppercase tracking-[0.24em] text-slate-500">Categorías</p>
-              <p class="mt-1 text-lg font-semibold text-white">{{ stats.categoriasCount }}</p>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-2.5 text-center sm:p-3">
+              <p class="truncate text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-500 sm:text-[10px]">Categorías</p>
+              <p class="mt-1 text-base font-semibold text-white sm:text-lg">{{ stats.categoriasCount }}</p>
             </div>
-            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
-              <p class="text-[10px] uppercase tracking-[0.24em] text-slate-500">Recordatorios</p>
-              <p class="mt-1 text-lg font-semibold text-white">{{ stats.recordatoriosCount }}</p>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-2.5 text-center sm:p-3">
+              <p class="truncate text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-500 sm:text-[10px]">Recordatorios</p>
+              <p class="mt-1 text-base font-semibold text-white sm:text-lg">{{ stats.recordatoriosCount }}</p>
             </div>
           </div>
         </div>
@@ -521,9 +520,9 @@ export default {
       </div>
 
       <!-- Sort bar -->
-      <div class="px-4 pb-3 flex items-center gap-2">
-        <span class="text-xs text-slate-500 font-medium">Ordenar:</span>
-        <div class="flex gap-1">
+      <div class="px-4 pb-3 flex flex-wrap items-center gap-2">
+        <span class="text-xs font-medium text-slate-500">Ordenar:</span>
+        <div class="flex flex-wrap gap-1">
           <button @click="sortOption = 'fecha'" :class="sortOption === 'fecha' ? 'text-white bg-slate-700/50' : 'text-slate-400 hover:text-white'" class="text-xs px-2.5 py-1 rounded-lg transition-colors">
             Más recientes
           </button>
