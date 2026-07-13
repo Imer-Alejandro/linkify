@@ -44,7 +44,11 @@ export default defineConfig({
       },
       workbox: {
         clientsClaim: true,
-        skipWaiting: true
+        skipWaiting: true,
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
+        navigateFallback: '/index.html',
+        swDest: 'sw.js',
+        importScripts: ['service-worker.js']
       }
     })
   ],

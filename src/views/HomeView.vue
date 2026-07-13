@@ -20,6 +20,10 @@ export default {
   mounted(){
     this.obtener_categoria();
     this.obtener_enlaces();
+    this.verificarRecordatorios();
+    this.reminderCheckInterval = window.setInterval(() => {
+      this.verificarRecordatorios()
+    }, 30000)
 
     emitter.on('abrir_eliminar_enlace',(data)=>{
       this.mostrarEliminarEnlace=true
@@ -83,6 +87,12 @@ export default {
       this.toggleFavorito(data)
     })
   },
+  beforeUnmount(){
+    this.scheduledReminderTimers.forEach(timerId => clearTimeout(timerId))
+    if (this.reminderCheckInterval) {
+      window.clearInterval(this.reminderCheckInterval)
+    }
+  },
   components:{
     "registrar-enlace":registrar_enlaces,
     "registrar-categoria":registrar_categoria,
@@ -115,7 +125,19 @@ export default {
       mostrarEliminarCategoria:false,
       mostrarEliminarEnlace:false,
       mostrarImportExcel:false,
-      mostrarExportExcel:false
+      mostrarExportExcel:false,
+      upcomingReminders:[],
+      scheduledReminderTimers:[],
+      reminderCheckInterval:null
+    }
+  },
+  computed:{
+    stats(){
+      return {
+        totalEnlaces: this.enlaces.length,
+        categoriasCount: this.categorias.length,
+        recordatoriosCount: this.upcomingReminders.length
+      }
     }
   },
   watch:{
@@ -175,6 +197,7 @@ export default {
     },
     obtener_enlaces(){
       this.aplicarFiltros()
+      this.verificarRecordatorios()
     },
     toggleFavorito(data) {
       localforage.getItem('token_enlace')
@@ -186,7 +209,6 @@ export default {
         )
         if (idx !== -1) {
           enlaces[idx].favorito = !enlaces[idx].favorito
-          // Update the reactive copy too
           const localIdx = this.enlaces.findIndex(e =>
             e.enlace_url === data.enlace_url && e.nombre === data.nombre
           )
@@ -199,12 +221,98 @@ export default {
       })
       .catch(err => console.error(err))
     },
+    limpiarTimers(){
+      this.scheduledReminderTimers.forEach(timerId => clearTimeout(timerId))
+      this.scheduledReminderTimers = []
+    },
+    async verificarRecordatorios(){
+      try {
+        const listado = await localforage.getItem('token_enlace')
+        const enlaces = listado ? JSON.parse(listado) : []
+        const now = Date.now()
+
+        this.limpiarTimers()
+
+        this.upcomingReminders = enlaces
+          .filter(item => item.reminder_enabled && item.reminder_at && !item.reminder_notified)
+          .filter(item => new Date(item.reminder_at).getTime() > now)
+          .sort((a, b) => new Date(a.reminder_at) - new Date(b.reminder_at))
+          .slice(0, 3)
+
+        if (navigator.serviceWorker?.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'REMINDERS_SYNC',
+            reminders: enlaces
+          })
+        }
+
+        enlaces.forEach((item) => {
+          if (!item.reminder_enabled || !item.reminder_at || item.reminder_notified) return
+
+          const reminderTime = new Date(item.reminder_at).getTime()
+          if (reminderTime <= now) {
+            this.activarRecordatorio(item)
+            return
+          }
+
+          const timerId = window.setTimeout(() => {
+            this.activarRecordatorio(item)
+          }, reminderTime - now)
+
+          this.scheduledReminderTimers.push(timerId)
+        })
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    async activarRecordatorio(item) {
+      try {
+        const listado = await localforage.getItem('token_enlace')
+        if (!listado) return
+
+        const enlaces = JSON.parse(listado)
+        const itemIndex = enlaces.findIndex((link) => link.enlace_url === item.enlace_url && link.nombre === item.nombre)
+        if (itemIndex === -1) return
+
+        enlaces[itemIndex].reminder_notified = true
+        await localforage.setItem('token_enlace', JSON.stringify(enlaces))
+
+        this.mostrarNotificacion(item)
+        this.verificarRecordatorios()
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    async mostrarNotificacion(item) {
+      const title = `Recordatorio: ${item.nombre}`
+      const body = item.descripcion || 'Es hora de revisar este enlace.'
+
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          new Notification(title, { body, icon: '/red-mundial.png' })
+          return
+        }
+
+        if (Notification.permission !== 'denied') {
+          const permission = await Notification.requestPermission()
+          if (permission === 'granted') {
+            new Notification(title, { body, icon: '/red-mundial.png' })
+            return
+          }
+        }
+      }
+
+      toast.info(`${title} · ${body}`)
+    },
+    irARecordatorios(){
+      this.$router.push('/recordatorios')
+    }
   },
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#0f172a] pb-32">
+  <div class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(30,41,59,0.95),_rgba(2,6,23,1))] pb-32">
 
     <registrar-enlace v-if="mostrarRegistrarEnlace"/>
     <editar-enlace :datos_enlace="datos_enlace_acion" v-if="mostrarEditarEnlace"/>
@@ -217,26 +325,50 @@ export default {
     <export-excel v-if="mostrarExportExcel" @close="mostrarExportExcel=false"/>
 
     <!-- Header -->
-    <header class="sticky top-0 z-30 bg-[#0f172a]/90 backdrop-blur-xl border-b border-slate-800">
+    <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
       <div class="px-4 pt-4 pb-3">
-        <div class="flex items-center justify-between mb-3">
-          <h1 class="text-xl font-bold tracking-tight">Links</h1>
-          <div class="flex items-center gap-1">
-            <button @click="mostrarImportExcel=true" class="btn-ghost text-xs" title="Importar Excel">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-              </svg>
-            </button>
-            <button @click="mostrarExportExcel=true" class="btn-ghost text-xs" title="Exportar Excel">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-            </button>
+        <div class="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-4 shadow-lg">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">Dashboard</p>
+              <h1 class="mt-1 text-xl font-semibold text-white">Gestiona tus enlaces con calma</h1>
+              <p class="mt-1 text-sm text-slate-400">Organiza, prioriza y recuerda lo que te importa.</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <button @click="irARecordatorios" class="rounded-full border border-slate-700 bg-slate-800/70 px-3 py-2 text-xs font-medium text-slate-200">
+                Calendario
+              </button>
+              <button @click="mostrarImportExcel=true" class="btn-ghost text-xs" title="Importar Excel">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+              </button>
+              <button @click="mostrarExportExcel=true" class="btn-ghost text-xs" title="Exportar Excel">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-3 gap-2">
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
+              <p class="text-[10px] uppercase tracking-[0.24em] text-slate-500">Enlaces</p>
+              <p class="mt-1 text-lg font-semibold text-white">{{ stats.totalEnlaces }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
+              <p class="text-[10px] uppercase tracking-[0.24em] text-slate-500">Categorías</p>
+              <p class="mt-1 text-lg font-semibold text-white">{{ stats.categoriasCount }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
+              <p class="text-[10px] uppercase tracking-[0.24em] text-slate-500">Recordatorios</p>
+              <p class="mt-1 text-lg font-semibold text-white">{{ stats.recordatoriosCount }}</p>
+            </div>
           </div>
         </div>
 
         <!-- Search bar -->
-        <form @submit.prevent="buscar_enlace()" class="relative">
+        <form @submit.prevent="buscar_enlace()" class="relative mt-3">
           <input
             v-model="data_busqueda"
             class="input-field pl-10 pr-4"
@@ -320,12 +452,15 @@ export default {
 
     <!-- Link list -->
     <main class="px-4 mt-4">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-sm text-slate-400 font-medium">
-          Enlaces
-          <span v-if="indicador_categoria" class="text-slate-500">· {{ indicador_categoria.replace('- ', '') }}</span>
-        </h2>
-        <span class="text-xs text-slate-500">{{ enlaces.length }} enlaces</span>
+      <div class="mb-4 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-medium text-slate-300">
+            Enlaces
+            <span v-if="indicador_categoria" class="text-slate-500">· {{ indicador_categoria.replace('- ', '') }}</span>
+          </h2>
+          <p class="text-xs text-slate-500">Tu colección organizada y lista para revisar.</p>
+        </div>
+        <span class="rounded-full border border-slate-800 bg-slate-900/70 px-2.5 py-1 text-xs text-slate-400">{{ enlaces.length }} enlaces</span>
       </div>
 
       <!-- Loading skeleton -->
