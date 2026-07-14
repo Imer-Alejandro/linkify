@@ -21,7 +21,10 @@ export default {
                 origen:'',
                 favorito: false,
                 fecha_creacion: Date.now(),
-                tags: []
+                tags: [],
+                reminder_enabled: false,
+                reminder_at: '',
+                reminder_notified: false
             }
         }
     },
@@ -77,6 +80,10 @@ export default {
         registrar_enlace() {
             if (this.enlace.categoria === '') {
                 toast.error("Debe indicar una categoría");
+                return
+            }
+            if (this.enlace.reminder_enabled && !this.enlace.reminder_at) {
+                toast.error("Debe seleccionar fecha y hora para el recordatorio");
                 return
             }
             localforage.getItem('token_enlace')
@@ -198,6 +205,17 @@ export default {
                 <div class="space-y-1.5">
                     <label class="text-sm text-slate-400 font-medium">Descripción <span class="text-slate-500">(opcional)</span></label>
                     <textarea v-model="enlace.descripcion" maxlength="640" class="input-field min-h-[90px] pt-3 resize-none" placeholder="Añadir descripción..."></textarea>
+                </div>
+
+                <div class="rounded-2xl border border-slate-700/70 bg-slate-900/50 p-3 space-y-3">
+                    <label class="flex items-center justify-between gap-3 rounded-xl bg-slate-800/70 px-3 py-2 text-sm text-slate-300">
+                        <span>Programar recordatorio</span>
+                        <input v-model="enlace.reminder_enabled" type="checkbox" class="h-4 w-4 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500" />
+                    </label>
+                    <div v-if="enlace.reminder_enabled" class="space-y-1.5">
+                        <label class="text-sm text-slate-400 font-medium">Fecha y hora</label>
+                        <input v-model="enlace.reminder_at" class="input-field" type="datetime-local" />
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-primary">
