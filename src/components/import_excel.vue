@@ -1,6 +1,6 @@
 <script>
 import localforage from 'localforage';
-import { parseExcelFile, downloadTemplate } from '@/services/excel';
+import { parseExcelFile, downloadTemplate, buildCategories } from '@/services/excel';
 import { toast } from 'vue3-toastify';
 
 export default {
@@ -67,14 +67,11 @@ export default {
             added++
           }
         }
-        // Also ensure categories exist
+        // Ensure categories exist and keep the filters functional
         const catRaw = await localforage.getItem('token_categoria')
-        let categorias = catRaw ? JSON.parse(catRaw) : []
-        for (const item of this.preview.data) {
-          if (item.categoria && !categorias.includes(item.categoria)) {
-            categorias.unshift(item.categoria)
-          }
-        }
+        const existingCategories = catRaw ? JSON.parse(catRaw) : []
+        const categorias = buildCategories(existingCategories, this.preview.data)
+
         await localforage.setItem('token_enlace', JSON.stringify(enlaces))
         await localforage.setItem('token_categoria', JSON.stringify(categorias))
         toast.success(`${added} enlaces importados correctamente`)

@@ -1,5 +1,64 @@
 import * as XLSX from 'xlsx'
 
+export const DEFAULT_CATEGORY = 'Sin categoría'
+
+export function normalizeCategoryName(categoria) {
+  const normalized = String(categoria || '').trim().replace(/\s+/g, ' ')
+  return normalized === '' ? DEFAULT_CATEGORY : normalized
+}
+
+export function buildCategories(existingCategories, importedItems) {
+  const categories = []
+  const seen = new Set()
+
+  const addCategory = (category) => {
+    const normalized = normalizeCategoryName(category)
+    const key = normalized.toLowerCase()
+    if (!seen.has(key)) {
+      seen.add(key)
+      return normalized
+    }
+    return null
+  }
+
+  const existingNormalized = []
+  if (Array.isArray(existingCategories)) {
+    for (const category of existingCategories) {
+      const normalized = normalizeCategoryName(category)
+      const key = normalized.toLowerCase()
+      if (!seen.has(key)) {
+        seen.add(key)
+        existingNormalized.push(normalized)
+      }
+    }
+  }
+
+  for (const item of importedItems) {
+    const category = addCategory(item.categoria)
+    if (category) {
+      categories.push(category)
+    }
+  }
+
+  categories.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+
+  for (const category of existingNormalized) {
+    categories.push(category)
+  }
+
+  return categories
+}
+
+export function isDuplicateLink(existingLinks, link) {
+  const normalizedUrl = String(link.enlace_url || '').trim().toLowerCase()
+  const normalizedName = String(link.nombre || '').trim().toLowerCase()
+  return Array.isArray(existingLinks) && existingLinks.some(existing => {
+    const existingUrl = String(existing.enlace_url || '').trim().toLowerCase()
+    const existingName = String(existing.nombre || '').trim().toLowerCase()
+    return existingUrl === normalizedUrl || existingName === normalizedName
+  })
+}
+
 export function exportToExcel(data, filename = 'enlaces.xlsx') {
   const exportData = data.map(e => ({
     nombre: e.nombre || '',
@@ -27,18 +86,25 @@ export function parseExcelFile(file) {
         const json = XLSX.utils.sheet_to_json(ws, { defval: '' })
 
         const errors = []
-        const valid = json.map((row, i) => {
+        const valid = []
+
+        json.forEach((row, i) => {
           const rowNum = i + 2
-          if (!row.nombre || !row.enlace_url || !row.categoria) {
-            errors.push(`Fila ${rowNum}: faltan campos obligatorios (nombre, enlace_url, categoria)`)
+          const nombre = String(row.nombre || '').trim()
+          const enlace_url = String(row.enlace_url || '').trim()
+
+          if (!nombre || !enlace_url) {
+            errors.push(`Fila ${rowNum}: faltan campos obligatorios (nombre, enlace_url)`)
+            return
           }
-          return {
-            nombre: String(row.nombre || '').trim(),
-            enlace_url: String(row.enlace_url || '').trim(),
+
+          valid.push({
+            nombre,
+            enlace_url,
             descripcion: String(row.descripcion || '').trim(),
-            categoria: String(row.categoria || '').trim(),
+            categoria: normalizeCategoryName(row.categoria),
             tags: row.tags ? String(row.tags).split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : []
-          }
+          })
         })
 
         resolve({ data: valid, errors })
